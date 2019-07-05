@@ -1,44 +1,49 @@
 ---
 
-- name: Playbook to configure FreeIpa client
+- name: Configure FreeIpa client
   hosts: 
     - client
-
+  gather_facts: no
+  remote_user: vagrant
   become: true
   
   vars:
     domain: "freeipa.local"
     ipa_admin: "admin"
     ipa_pass: "qwerty19"
-    ipa_server_name: "dc.freeipa.local"
+    ipa_server_name: "dc"
     ipa_server_ip: "172.20.10.50"
     ipa_realm: "FREEIPA.LOCAL"
 
   tasks:
   - name: Install ipa client
     yum:
-      name: "{{ item }}"
+      name: "ipa-client"
       state: present
-    with_items: "ipa-client"
 
+  - name: hostaname configuring
+    hostname:
+      name: "{{ inventory_hostname }}.{{ domain }}" # required. Name of the host
+    
   - name: resolv.conf configuring
     lineinfile:
       path: /etc/resolv.conf
       line: "nameserver 172.20.10.50"
-  
+ 
   - name: hosts file configuring
     blockinfile:
       path: /etc/hosts
+      marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
       block: |
         {{ item.ip }} {{ item.name }}
-      with_items: 
-        - { name: "{{ ansible_hostname }}.{{ domain }}", ip: 172.20.10.50 }
-        - { name: "{{ ipa_server_name }}.{{ domain }}", ip: "{{ ipa_server_ip }}" }
-  
-        - name: Run ipa-client-install
+    with_items:    
+    - { name: "{{ ipa_server_name }}.{{ domain }}", ip: "{{ ipa_server_ip }}" }
+      
+  - name: Run ipa-client-install
     shell: > 
       ipa-client-install
-      --force-join # Override the host entry on the server and force client enrollment
+      --force-join
+      --force-ntpd
       --domain {{ domain }}
       --principal {{ ipa_admin }}@{{ ipa_realm }} 
       --password {{ ipa_pass }}

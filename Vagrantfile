@@ -57,11 +57,12 @@ Vagrant.configure("2") do |config|
           yum install ipa-server ipa-server-dns -y
           echo "172.20.10.50  dc.freeipa.local dc" > /etc/hosts
           echo "172.20.10.51  client" >> /etc/hosts
-          echo "[client]\n172.20.10.51" >> /etc/ansible/hosts
-          sed -i '71 s/#//' /etc/ansible/ansible.cfg
-          sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
-          yes | ipa-server-install -r FREEIPA.LOCAL -n freeipa.local -p qwerty19 -a qwerty19 --hostname=dc.freeipa.local --ip-address=172.20.10.50 --setup-dns --no-forwarders --no-reverse
-          # ansible-playbook ~/.ansible/roles/didaktikm.ansible_nginx/playbook.yml
+          echo "[ipaclients]\nclient" >> /etc/ansible/hosts
+          sed -i 's/#host_key_checking = False/host_key_checking = False/g' /etc/ansible/ansible.cfg
+          #sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
+          setenforce 0
+          yes | ipa-server-install -r FREEIPA.LOCAL -n freeipa.local -p qwerty19 -a qwerty19 --hostname=dc.freeipa.local --ip-address=172.20.10.50 --setup-dns --no-forwarders --no-reverse 
+          ansible-playbook /vagrant/playbook-client.yml
           SHELL
       when "client"
         box.vm.provision "shell", run: "always", inline: <<-SHELL
