@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
           box.vm.network "private_network", ip: boxconfig[:ip_addr]
 
           box.vm.provider :virtualbox do |vb|
-          vb.customize ["modifyvm", :id, "--memory", "256"]
+          vb.customize ["modifyvm", :id, "--memory", "1024"]
         #   vb.customize ["storagectl", :id, "--name", "SATA", "--add", "sata" ]
           vb.name = boxname.to_s
 
@@ -46,19 +46,21 @@ Vagrant.configure("2") do |config|
       case boxname.to_s
       when "freeipa"
         box.vm.provision "shell", run: "always", inline: <<-SHELL
-          yum install epel-release -y
-          yum install ansible vim -y
-          yum install -y git
-          curl -o ~/.vimrc https://raw.githubusercontent.com/didaktikm/vimconf/master/.vimrc
           cp /vagrant/id_rsa /home/vagrant/.ssh/
           cp /vagrant/id_rsa /root/.ssh/
           chown vagrant:vagrant /home/vagrant/.ssh/id_rsa 
           chown root:root /root/.ssh/id_rsa
           chmod 0600 /home/vagrant/.ssh/id_rsa
           chmod 0600 /root/.ssh/id_rsa
+          #yum update -y
+          yum install epel-release ansible vim -y
+          yum install ipa-server ipa-server-dns -y
+          echo "172.20.10.50  dc.freeipa.local dc" > /etc/hosts
           echo "172.20.10.51  client" >> /etc/hosts
           echo "[client]\n172.20.10.51" >> /etc/ansible/hosts
           sed -i '71 s/#//' /etc/ansible/ansible.cfg
+          sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
+          yes | ipa-server-install -r FREEIPA.LOCAL -n freeipa.local -p qwerty19 -a qwerty19 --hostname=dc.freeipa.local --ip-address=172.20.10.50 --setup-dns --no-forwarders --no-reverse
           # ansible-playbook ~/.ansible/roles/didaktikm.ansible_nginx/playbook.yml
           SHELL
       when "client"
