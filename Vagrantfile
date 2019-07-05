@@ -52,7 +52,7 @@ Vagrant.configure("2") do |config|
           chown root:root /root/.ssh/id_rsa
           chmod 0600 /home/vagrant/.ssh/id_rsa
           chmod 0600 /root/.ssh/id_rsa
-          ##yum update -y
+          #yum update -y
           yum install epel-release ansible vim -y
           yum install ipa-server ipa-server-dns -y
           echo "172.20.10.50  dc.freeipa.local dc" > /etc/hosts
