@@ -6,10 +6,12 @@ MACHINES = {
   :client => {
         :box_name => "centos/7",
         :ip_addr => '172.20.10.51',
-  },
-  :freeipa => {
+        :memory => "256"
+  },       
+  :ipaserver => {
         :box_name => "centos/7",
         :ip_addr => '172.20.10.50',
+        :memory => "2048"
   }
 }
 
@@ -26,10 +28,10 @@ Vagrant.configure("2") do |config|
 
           box.vm.network "private_network", ip: boxconfig[:ip_addr]
 
-          box.vm.provider :virtualbox do |vb|
-          vb.customize ["modifyvm", :id, "--memory", "1024"]
+          # box.vm.provider :virtualbox do |vb|
+          # vb.customize ["modifyvm", :id, "--memory", "2048"]
         #   vb.customize ["storagectl", :id, "--name", "SATA", "--add", "sata" ]
-          vb.name = boxname.to_s
+          # vb.name = boxname.to_s
 
         #   boxconfig[:disks].each do |dname, dconf|
         #       unless File.exist?(dconf[:dfile])
@@ -37,14 +39,14 @@ Vagrant.configure("2") do |config|
         #       end
         #       vb.customize ['storageattach', :id,  '--storagectl', 'SATA', '--port', dconf[:port], '--device', 0, '--type', 'hdd', '--medium', dconf[:dfile]]
         # end
-          end
+        # end
       box.vm.provision "shell", inline: <<-SHELL
           mkdir -p ~root/.ssh
           cp ~vagrant/.ssh/auth* ~root/.ssh
       SHELL
 
       case boxname.to_s
-      when "freeipa"
+      when "ipaserver"
         box.vm.provision "shell", run: "always", inline: <<-SHELL
           cp /vagrant/id_rsa /home/vagrant/.ssh/
           cp /vagrant/id_rsa /root/.ssh/
@@ -52,16 +54,13 @@ Vagrant.configure("2") do |config|
           chown root:root /root/.ssh/id_rsa
           chmod 0600 /home/vagrant/.ssh/id_rsa
           chmod 0600 /root/.ssh/id_rsa
-          #yum update -y
           yum install epel-release ansible vim -y
           yum install ipa-server ipa-server-dns -y
-          echo "172.20.10.50  dc.freeipa.local dc" > /etc/hosts
+          echo "172.20.10.50  pol.otus.local pol" > /etc/hosts
           echo "172.20.10.51  client" >> /etc/hosts
           echo "[ipaclients]\nclient" >> /etc/ansible/hosts
           sed -i 's/#host_key_checking = False/host_key_checking = False/g' /etc/ansible/ansible.cfg
-          #sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
-          setenforce 0
-          yes | ipa-server-install -r FREEIPA.LOCAL -n freeipa.local -p qwerty19 -a qwerty19 --hostname=dc.freeipa.local --ip-address=172.20.10.50 --setup-dns --no-forwarders --no-reverse 
+          ipa-server-install --hostname=pol.otus.local --domain=otus.local --realm=OTUS.LOCAL --ds-password=qwerty19 --admin-password=qwerty19 --mkhomedir --setup-dns --forwarder=8.8.8.8 --auto-reverse --unattended
           ansible-playbook /vagrant/playbook-client.yml
           SHELL
       when "client"

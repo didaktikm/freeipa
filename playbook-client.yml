@@ -8,12 +8,12 @@
   become: true
   
   vars:
-    domain: "freeipa.local"
+    domain: "otus.local"
     ipa_admin: "admin"
     ipa_pass: "qwerty19"
-    ipa_server_name: "dc"
+    ipa_server_name: "pol"
     ipa_server_ip: "172.20.10.50"
-    ipa_realm: "FREEIPA.LOCAL"
+    ipa_realm: "OTUS.LOCAL"
 
   tasks:
   - name: Install ipa client
