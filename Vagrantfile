@@ -3,7 +3,7 @@
 home = ENV['HOME']
 
 MACHINES = {
-  :client => {
+  :ipaclient => {
         :box_name => "centos/7",
         :ip_addr => '172.20.10.51',
         :memory => "256"
@@ -63,7 +63,7 @@ Vagrant.configure("2") do |config|
           ipa-server-install --hostname=pol.otus.local --domain=otus.local --realm=OTUS.LOCAL --ds-password=qwerty19 --admin-password=qwerty19 --mkhomedir --setup-dns --forwarder=8.8.8.8 --auto-reverse --unattended
           ansible-playbook /vagrant/playbook-client.yml
           SHELL
-      when "client"
+      when "ipaclient"
         box.vm.provision "shell", run: "always", inline: <<-SHELL
         echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCW+VHI6di+7jZZhnYiCUciVO3oCSJ1xkV+8TINsNy1Itek0BUnorH+Mh6wC5eHoFVsid39v5A5ypzYZvJWhjwu4LNBJFroNhPnpmSBoA7Xk9U+slDI1A6pImop3qQbncMbYMdeyK5yoQO9bgJKDoQG7ak99qp24C4koFHGXO9Bejhenkkct2j0iTQreRyv2y3oSeOvsvQcBFuYS3H0FPhTUII8dx+/tjOTYFaxiA+EkWhuyXfhnrUd60BN5+ajqEgtv4CYZm2MBzDWu3Sor142Ms3R/FbwF1MJKd7JHOzJcTARfnpBqBZi+Or+l9+Pdl8yzxbxO0+9yaj7MGP9eyVT" >> /home/vagrant/.ssh/authorized_keys
         SHELL
